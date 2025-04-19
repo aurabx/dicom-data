@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace Aurabx\DicomData;
 
 /**
- * Provides global access to DICOM tag lookup
+ * Provides static access to DICOM tag lookup
  */
 class DicomDictionary
 {
     private static ?DicomTagLoader $loader = null;
 
+    /**
+     * @param  DicomTagLoader  $customLoader
+     * @return void
+     */
     public static function preload(DicomTagLoader $customLoader): void
     {
         self::$loader = $customLoader;
     }
 
+    /**
+     * @return DicomTagLoader
+     */
     public static function getLoader(): DicomTagLoader
     {
         if (!self::$loader) {
@@ -25,9 +32,13 @@ class DicomDictionary
         return self::$loader;
     }
 
+    /**
+     * @param  string  $name
+     * @return string|null
+     */
     public static function getTagIdByName(string $name): ?string
     {
-        return self::getLoader()->getTagIdByName($name);
+        return self::getLoader()->getTagByName($name);
     }
 
     public static function getTagName(string $tagId): ?string
@@ -37,7 +48,7 @@ class DicomDictionary
 
     public static function getTagInfo(string $tagId): ?array
     {
-        return self::getLoader()->getTagInfo($tagId);
+        return self::getLoader()->getTag($tagId);
     }
 
     public static function getTagVR(string $tagId): ?string

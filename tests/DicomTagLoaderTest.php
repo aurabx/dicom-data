@@ -1,0 +1,111 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Aurabx\DicomData\Unit;
+
+use Aurabx\DicomData\DicomTagLoader;
+use Aurabx\DicomData\DicomDictionaryException;
+use PHPUnit\Framework\TestCase;
+
+final class DicomTagLoaderTest extends TestCase
+{
+    private array $mockTags = [
+        '00080020' => [
+            'name' => 'StudyDate',
+            'vr' => 'DA',
+            'description' => 'Date the study was performed'
+        ],
+        '00080030' => [
+            'name' => 'StudyTime',
+            'vr' => 'TM',
+            'description' => 'Time the study was performed',
+            'vm' => '1'
+        ],
+        '00081048' => [
+            'name' => 'PhysiciansOfRecord',
+            'vr' => 'PN',
+            'description' => 'Names of the physicians of record for the study',
+            'vm' => '1-n'
+        ]
+    ];
+
+    public function test_it_can_load_tags_from_array(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $this->assertNotEmpty($loader->getAllTags());
+        $this->assertSame('StudyDate', $loader->getTag('00080020')['name']);
+    }
+
+    public function test_it_can_return_tag_by_id(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $tag = $loader->getTag('00080030');
+        $this->assertNotNull($tag);
+        $this->assertSame('StudyTime', $tag['name']);
+    }
+
+    public function test_it_can_return_tag_name(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $name = $loader->getTagName('00080020');
+        $this->assertSame('StudyDate', $name);
+    }
+
+    public function test_it_can_return_tag_vr(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $vr = $loader->getTagVr('00080030');
+        $this->assertSame('TM', $vr);
+    }
+
+    public function test_it_can_return_tag_vm(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $vm1 = $loader->getTagVm('00080030');
+        $vm2 = $loader->getTagVm('00081048');
+
+        $this->assertSame('1', $vm1);
+        $this->assertSame('1-n', $vm2);
+    }
+
+    public function test_it_can_resolve_tag_id_by_name(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $tagId = $loader->getTagByName('studydate');
+        $this->assertSame('00080020', $tagId);
+
+        $tagIdCamel = $loader->getTagByName('StudyTime');
+        $this->assertSame('00080030', $tagIdCamel);
+    }
+
+    public function test_it_can_return_vr_meaning(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+
+        $this->assertSame('Date', $loader->getVRMeaning('DA'));
+        $this->assertSame('Time', $loader->getVRMeaning('tm'));
+        $this->assertNull($loader->getVRMeaning('xyz'));
+    }
+
+    public function test_it_throws_if_file_is_invalid(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+
+        $this->expectException(DicomDictionaryException::class);
+        $this->expectExceptionMessage('Invalid file path');
+        $loader->loadFromFile(jsonPath: '/this/does/not/exist.json');
+    }
+}

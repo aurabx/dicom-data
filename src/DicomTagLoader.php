@@ -2,8 +2,6 @@
 
 namespace Aurabx\DicomData;
 
-use Aurabx\DicomWebParser\DicomModel\DicomTag;
-
 /**
  * Responsible for loading and providing access to DICOM tag definitions
  */
@@ -56,6 +54,9 @@ class DicomTagLoader
         'UT' => 'Unlimited Text'
     ];
 
+    /**
+     * @param  string|null  $tagsPath
+     */
     public function __construct(?string $tagsPath = null)
     {
         if ($tagsPath !== null) {
@@ -65,6 +66,9 @@ class DicomTagLoader
         }
     }
 
+    /**
+     * @return void
+     */
     private function loadDefaultTags(): void
     {
         $resourcesDir = dirname(__DIR__) . '/resources/tags';
@@ -75,30 +79,40 @@ class DicomTagLoader
                 $this->loadFromFile($jsonFile, false);
             }
         } else {
-            throw new ParserException("Could not find any DICOM tag definitions in default locations");
+            throw new DicomDictionaryException("Could not find any DICOM tag definitions in default locations");
         }
     }
 
+    /**
+     * @param  string  $jsonPath
+     * @param  bool  $clearExisting
+     * @return void
+     */
     public function loadFromFile(string $jsonPath, bool $clearExisting = true): void
     {
         if (!is_file($jsonPath)) {
-            throw new ParserException("Invalid file path: $jsonPath");
+            throw new DicomDictionaryException("Invalid file path: $jsonPath");
         }
 
         $jsonContent = file_get_contents($jsonPath);
         if ($jsonContent === false) {
-            throw new ParserException("Failed to read tag definition file: $jsonPath");
+            throw new DicomDictionaryException("Failed to read tag definition file: $jsonPath");
         }
 
         try {
             $data = json_decode($jsonContent, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new ParserException("Invalid JSON: {$e->getMessage()}");
+            throw new DicomDictionaryException("Invalid JSON: {$e->getMessage()}");
         }
 
         $this->loadFromArray($data, $clearExisting);
     }
 
+    /**
+     * @param  array  $data
+     * @param  bool  $clearExisting
+     * @return void
+     */
     public function loadFromArray(array $data, bool $clearExisting = true): void
     {
         if ($clearExisting) {
@@ -114,45 +128,100 @@ class DicomTagLoader
         }
     }
 
-    public function getTagInfo(string $tagId): ?array
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getTag(string $id): ?array
     {
-        $normalizedTag = DicomTag::normalizeTag($tagId);
-        return $this->tagData[$normalizedTag] ?? null;
+        return $this->tagData[$id] ?? null;
     }
 
-    public function getTagName(string $tagId): ?string
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getTagName(string $id): ?string
     {
-        $normalizedTag = DicomTag::normalizeTag($tagId);
-        return $this->tagData[$normalizedTag]['name'] ?? null;
+        if (isset($this->tagData, $id)) {
+            return $this->tagData[$id]['name'];
+        }
+
+        return null;
     }
 
-    public function getTagIdByName(string $name): ?string
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getTagVr(string $id): ?string
+    {
+        if (isset($this->tagData, $id)) {
+            return $this->tagData[$id]['vr'];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getTagDescription(string $id): ?string
+    {
+        if (isset($this->tagData, $id)) {
+            return $this->tagData[$id]['description'];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getTagVm(string $id): ?string
+    {
+        if (isset($this->tagData, $id)) {
+            if (array_key_exists('vm', $this->tagData[$id])) {
+                return $this->tagData[$id]['vm'];
+            }
+
+            return '1';
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $name
+     * @return string|null
+     */
+    public function getTagByName(string $name): ?string
     {
         return $this->tagByName[strtolower($name)] ?? null;
     }
 
-    public function getTagVR(string $tagId): ?string
-    {
-        $normalizedTag = DicomTag::normalizeTag($tagId);
-        return $this->tagData[$normalizedTag]['vr'] ?? null;
-    }
-
-    public function getTagDescription(string $tagId): ?string
-    {
-        $normalizedTag = DicomTag::normalizeTag($tagId);
-        return $this->tagData[$normalizedTag]['description'] ?? null;
-    }
-
+    /**
+     * @param  string  $vr
+     * @return string|null
+     */
     public function getVRMeaning(string $vr): ?string
     {
         return $this->vrMeanings[strtoupper($vr)] ?? null;
     }
 
+    /**
+     * @return \mixed[][]
+     */
     public function getAllTags(): array
     {
         return $this->tagData;
     }
 
+    /**
+     * @return string[]
+     */
     public function getAllVRs(): array
     {
         return $this->vrMeanings;
