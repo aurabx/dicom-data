@@ -1,5 +1,7 @@
 # Dicom Data
 
+***The list of DICOM tags is not currently complete and should be used with caution**.
+
 **Aurabx\\DicomData** is a PHP 8.2+ library for managing and resolving DICOM tag metadata. It provides a robust interface for loading DICOM dictionaries and resolving tag names with ease. Designed for integration with medical imaging platforms or DICOMWeb services.
 
 ## Requirements
