@@ -1,0 +1,50 @@
+{
+    "00080017": {
+        "name": "AcquisitionUID",
+        "vr": "UI",
+        "description": "Unique identification of the single continuous gathering of data over a period of time that resulted in this instance.",
+        "vm": "1"
+    },
+    "00200012": {
+        "name": "AcquisitionNumber",
+        "vr": "IS",
+        "description": "A number identifying the single continuous gathering of data over a period of time that resulted in this instance.",
+        "vm": "1"
+    },
+    "00080022": {
+        "name": "AcquisitionDate",
+        "vr": "DA",
+        "description": "The date the acquisition of data that resulted in this instance started.",
+        "vm": "1"
+    },
+    "00080032": {
+        "name": "AcquisitionTime",
+        "vr": "TM",
+        "description": "The time the acquisition of data that resulted in this instance started.",
+        "vm": "1"
+    },
+    "0008002A": {
+        "name": "AcquisitionDateTime",
+        "vr": "DT",
+        "description": "The date and time that the acquisition of data that resulted in this instance started.",
+        "vm": "1"
+    },
+    "00189073": {
+        "name": "AcquisitionDuration",
+        "vr": "FD",
+        "description": "Duration of the single continuous gathering of data over a period of time that resulted in this instance, in seconds.",
+        "vm": "1"
+    },
+    "00201002": {
+        "name": "ImagesInAcquisition",
+        "vr": "IS",
+        "description": "Number of images that resulted from this acquisition of data.",
+        "vm": "1"
+    },
+    "00083010": {
+        "name": "IrradiationEventUID",
+        "vr": "UI",
+        "description": "Unique identification of the irradiation event(s) associated with the acquisition of this instance.",
+        "vm": "1-n"
+    }
+}
