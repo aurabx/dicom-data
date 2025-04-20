@@ -49,7 +49,7 @@ class DicomDictionary
      * @param  string  $name
      * @return string|null
      */
-    public static function getTagByName(string $name): ?string
+    public static function getTagByName(string $name): ?array
     {
         return self::getLoader()->getTagByName($name);
     }

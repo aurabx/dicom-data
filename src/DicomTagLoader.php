@@ -121,7 +121,10 @@ class DicomTagLoader
         }
 
         foreach ($data as $tagId => $tagInfo) {
+
             $this->tagData[$tagId] = $tagInfo;
+            $this->tagData[$tagId]['id'] = $tagId;
+
             if (isset($tagInfo['name'])) {
                 $this->tagByName[strtolower($tagInfo['name'])] = $tagId;
             }
@@ -203,10 +206,27 @@ class DicomTagLoader
 
     /**
      * @param  string  $name
-     * @return string|null
+     * @return array|null
      */
-    public function getTagByName(string $name): ?string
+    public function getTagByName(string $name): ?array
     {
+        $tagId = $this->getTagIdByName($name);
+
+        if (!empty($tagId)) {
+            return $this->tagData[$tagId];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $name
+     * @return array|null
+     */
+    public function getTagIdByName(string $name): ?string
+    {
+        $name = $this->toCamelCase($name);
+
         return $this->tagByName[strtolower($name)] ?? null;
     }
 
@@ -282,6 +302,30 @@ class DicomTagLoader
             'both'  => '('.$group.','.$element.')',
             default => $normalized,
         };
+    }
+
+    /**
+     * @param  string  $input
+     * @return string
+     */
+    private function toCamelCase(string $input): string
+    {
+        // If the input is already camelCase, we leave it alone
+        if (!str_contains($input, '_') && !str_contains($input, '-')) {
+            return $input;
+        }
+
+        // Normalise hyphens and underscores to one format
+        $input = str_replace(['-', '_'], ' ', $input);
+
+        // Capitalise words
+        $input = ucwords($input);
+
+        // Remove spaces
+        $input = str_replace(' ', '', $input);
+
+        // Lowercase the first character to get proper camelCase
+        return lcfirst($input);
     }
 
 }

@@ -75,11 +75,10 @@ class DicomDictionaryTest extends TestCase
 
     public function testGetTagByName(): void
     {
-        $this->assertEquals('00100010', DicomDictionary::getTagByName('PatientName'));
+        $tag = DicomDictionary::getTagByName('PatientName');
+        $this->assertEquals('00100010', $tag['id']);
         $this->assertNull(DicomDictionary::getTagByName('NonExistentTag'));
     }
-
-
 
     public function testGetVR(): void
     {
