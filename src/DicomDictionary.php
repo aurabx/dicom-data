@@ -49,7 +49,7 @@ class DicomDictionary
      * @param  string  $name
      * @return string|null
      */
-    public static function getTagIdByName(string $name): ?string
+    public static function getTagByName(string $name): ?string
     {
         return self::getLoader()->getTagByName($name);
     }
@@ -92,7 +92,7 @@ class DicomDictionary
 
     public static function getVRMeaning(string $vr): ?string
     {
-        return self::getLoader()->getVRMeaning($vr);
+        return self::getLoader()->getVrMeaning($vr);
     }
 
     public static function getAllTags(): array

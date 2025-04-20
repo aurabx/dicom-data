@@ -134,7 +134,7 @@ class DicomTagLoader
      */
     public function getTag(string $id): ?array
     {
-        return $this->tagData[$id] ?? null;
+        return $this->tagData[$this->normaliseTag($id)] ?? null;
     }
 
     /**
@@ -143,6 +143,8 @@ class DicomTagLoader
      */
     public function getTagName(string $id): ?string
     {
+        $id = $this->normaliseTag($id);
+
         if (isset($this->tagData, $id)) {
             return $this->tagData[$id]['name'];
         }
@@ -156,6 +158,8 @@ class DicomTagLoader
      */
     public function getTagVr(string $id): ?string
     {
+        $id = $this->normaliseTag($id);
+
         if (isset($this->tagData, $id)) {
             return $this->tagData[$id]['vr'];
         }
@@ -169,6 +173,8 @@ class DicomTagLoader
      */
     public function getTagDescription(string $id): ?string
     {
+        $id = $this->normaliseTag($id);
+
         if (isset($this->tagData, $id)) {
             return $this->tagData[$id]['description'];
         }
@@ -182,6 +188,8 @@ class DicomTagLoader
      */
     public function getTagVm(string $id): ?string
     {
+        $id = $this->normaliseTag($id);
+
         if (isset($this->tagData, $id)) {
             if (array_key_exists('vm', $this->tagData[$id])) {
                 return $this->tagData[$id]['vm'];
@@ -206,7 +214,7 @@ class DicomTagLoader
      * @param  string  $vr
      * @return string|null
      */
-    public function getVRMeaning(string $vr): ?string
+    public function getVrMeaning(string $vr): ?string
     {
         return $this->vrMeanings[strtoupper($vr)] ?? null;
     }

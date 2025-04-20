@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Aurabx\DicomData\Unit;
 
+use Aurabx\DicomData\DicomDictionary;
 use Aurabx\DicomData\DicomTagLoader;
 use Aurabx\DicomData\DicomDictionaryException;
 use PHPUnit\Framework\TestCase;
@@ -95,9 +96,9 @@ final class DicomTagLoaderTest extends TestCase
     {
         $loader = new DicomTagLoader(tagsPath: null);
 
-        $this->assertSame('Date', $loader->getVRMeaning('DA'));
-        $this->assertSame('Time', $loader->getVRMeaning('tm'));
-        $this->assertNull($loader->getVRMeaning('xyz'));
+        $this->assertSame('Date', $loader->getVrMeaning('DA'));
+        $this->assertSame('Time', $loader->getVrMeaning('tm'));
+        $this->assertNull($loader->getVrMeaning('xyz'));
     }
 
     public function test_it_throws_if_file_is_invalid(): void
@@ -107,5 +108,41 @@ final class DicomTagLoaderTest extends TestCase
         $this->expectException(DicomDictionaryException::class);
         $this->expectExceptionMessage('Invalid file path');
         $loader->loadFromFile(jsonPath: '/this/does/not/exist.json');
+    }
+
+    public function testNormalizeTag(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $this->assertEquals('00100010', $loader->normaliseTag('00100010'));
+        $this->assertEquals('00100010', $loader->normaliseTag('0010,0010'));
+        $this->assertEquals('00100010', $loader->normaliseTag('(0010,0010)'));
+        $this->assertEquals('00100000', $loader->normaliseTag('0010'));
+    }
+
+    public function testFormatTag(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $this->assertEquals('0010,0010', $loader->formatTag('00100010', 'comma'));
+        $this->assertEquals('(00100010)', $loader->formatTag('00100010', 'paren'));
+        $this->assertEquals('(0010,0010)', $loader->formatTag('00100010', 'both'));
+        $this->assertEquals('00100010', $loader->formatTag('00100010', 'unknown'));
+
+        // Test with already formatted tags
+        $this->assertEquals('0010,0010', $loader->formatTag('0010,0010', 'comma'));
+        $this->assertEquals('(0010,0010)', $loader->formatTag('(0010,0010)', 'both'));
+    }
+
+    public function testGetVRMeaning(): void
+    {
+        $loader = new DicomTagLoader(tagsPath: null);
+        $loader->loadFromArray(data: $this->mockTags);
+
+        $this->assertEquals('Person Name', $loader->getVrMeaning('PN'));
+        $this->assertEquals('Unique Identifier', $loader->getVrMeaning('UI'));
+        $this->assertNull($loader->getVrMeaning('XX')); // Unknown VR
     }
 }
