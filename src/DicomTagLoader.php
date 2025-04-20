@@ -226,4 +226,54 @@ class DicomTagLoader
     {
         return $this->vrMeanings;
     }
+
+    /**
+     * Normalize a tag by removing any group/element separators
+     *
+     * @param  string  $tag  DICOM tag (e.g., "0010,0010" or "(0010,0010)")
+     * @return string Normalized tag (e.g., "00100010")
+     * @throws DicomDictionaryException
+     */
+    public function normaliseTag(string $tag): string
+    {
+        $normalized = preg_replace('/[^0-9A-Fa-f]/', '', $tag);
+
+        if (strlen($normalized) === 4) {
+            $normalized .= '0000';
+        }
+
+        if (strlen($normalized) !== 8) {
+            throw new DicomDictionaryException("Invalid DICOM tag: $tag");
+        }
+
+        return strtoupper($normalized);
+    }
+
+    /**
+     * Format a tag with a group/element separator
+     *
+     * @param  string  $tag  DICOM tag (e.g., "00100010")
+     * @param  string  $format  Format specifier ('comma', 'paren', or 'both')
+     * @return string Formatted tag (e.g., "0010,0010" or "(0010,0010)")
+     * @throws DicomDictionaryException
+     */
+    public function formatTag(string $tag, string $format = 'comma'): string
+    {
+        $normalized = $this->normaliseTag($tag);
+
+        if (strlen($normalized) !== 8) {
+            return $normalized;
+        }
+
+        $group = substr($normalized, 0, 4);
+        $element = substr($normalized, 4, 4);
+
+        return match ($format) {
+            'comma' => $group.','.$element,
+            'paren' => '('.$group.$element.')',
+            'both'  => '('.$group.','.$element.')',
+            default => $normalized,
+        };
+    }
+
 }

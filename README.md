@@ -19,13 +19,33 @@ composer require aurabx/dicom-data
 
 ```php
 use Aurabx\DicomData\DicomDictionary;
-use Aurabx\DicomData\DicomDictionaryTagNameResolver;
 
-$dictionary = new DicomDictionary();
-$resolver = new DicomDictionaryTagNameResolver($dictionary);
+// Lookup tag ID by name
+$tagId = DicomDictionary::getTagIdByName('ImagingFrequency');  // Returns '00180084'
 
-$tagName = $resolver->resolve('00100010'); // Patient's Name
+// Get full metadata
+$info = DicomDictionary::getTagInfo('00180084');
+
+// Get tag VR or description
+$vr = DicomDictionary::getTagVR('00180084');
+$desc = DicomDictionary::getTagDescription('00180084');
 ```
+
+### Testing with Custom Tags
+
+```php
+use Aurabx\DicomData\DicomDictionary;
+use Aurabx\DicomData\DicomTagLoader;
+
+$loader = new DicomTagLoader();
+$loader->loadFromArray([
+    '00100020' => ['name' => 'PatientID', 'vr' => 'LO'],
+    '00180084' => ['name' => 'ImagingFrequency', 'vr' => 'DS'],
+]);
+
+DicomDictionary::preload($loader);
+```
+
 
 ## Development
 ```bash

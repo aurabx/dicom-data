@@ -33,6 +33,19 @@ class DicomDictionary
     }
 
     /**
+     * Check if a tag exists in the known tags dictionary
+     *
+     * @param string $tag DICOM tag
+     * @return bool
+     */
+    public static function isKnownTag(string $tag): bool
+    {
+        return self::getLoader()->getTagName($tag) !== null;
+    }
+
+    /**
+     * Get the tag ID for a descriptive name
+     *
      * @param  string  $name
      * @return string|null
      */
@@ -41,16 +54,32 @@ class DicomDictionary
         return self::getLoader()->getTagByName($name);
     }
 
+    /**
+     * Get the descriptive name for a tag
+     *
+     * @param  string  $tagId
+     * @return string|null
+     */
     public static function getTagName(string $tagId): ?string
     {
         return self::getLoader()->getTagName($tagId);
     }
 
+    /**
+     * @param  string  $tagId
+     * @return array|null
+     */
     public static function getTagInfo(string $tagId): ?array
     {
         return self::getLoader()->getTag($tagId);
     }
 
+    /**
+     * Get the Value Representation (VR) for a tag
+     *
+     * @param  string  $tagId
+     * @return string|null
+     */
     public static function getTagVR(string $tagId): ?string
     {
         return self::getLoader()->getTagVR($tagId);
