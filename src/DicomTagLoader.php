@@ -10,12 +10,12 @@ class DicomTagLoader
     /**
      * @var array<string, array<string, mixed>> Loaded tag data
      */
-    private array $tagData = [];
+    private array $attributes = [];
 
     /**
      * @var array<string, string> Mapping from tag name to tag ID
      */
-    private array $tagByName = [];
+    private array $attributesByName = [];
 
     /**
      * @var array<string, string> Value Representation codes and their meanings
@@ -55,12 +55,12 @@ class DicomTagLoader
     ];
 
     /**
-     * @param  string|null  $tagsPath
+     * @param  string|null  $attributes_file_path
      */
-    public function __construct(?string $tagsPath = null)
+    public function __construct(?string $attributes_file_path = null)
     {
-        if ($tagsPath !== null) {
-            $this->loadFromFile($tagsPath);
+        if ($attributes_file_path !== null) {
+            $this->loadFromFile($attributes_file_path);
         } else {
             $this->loadDefaultTags();
         }
@@ -71,8 +71,8 @@ class DicomTagLoader
      */
     private function loadDefaultTags(): void
     {
-        $resourcesDir = dirname(__DIR__) . '/resources/tags';
-        $jsonFiles = glob("$resourcesDir/*.json");
+        $resourcesDir = dirname(__DIR__) . '/resources/dicom/innolitics/standard';
+        $jsonFiles = glob("$resourcesDir/attributes.json");
 
         if (!empty($jsonFiles)) {
             foreach ($jsonFiles as $jsonFile) {
@@ -116,17 +116,17 @@ class DicomTagLoader
     public function loadFromArray(array $data, bool $clearExisting = true): void
     {
         if ($clearExisting) {
-            $this->tagData = [];
-            $this->tagByName = [];
+            $this->attributes = [];
+            $this->attributesByName = [];
         }
 
         foreach ($data as $tagId => $tagInfo) {
 
-            $this->tagData[$tagId] = $tagInfo;
-            $this->tagData[$tagId]['id'] = $tagId;
+            $this->attributes[$tagId] = $tagInfo;
+            $this->attributes[$tagId]['id'] = $tagId;
 
-            if (isset($tagInfo['name'])) {
-                $this->tagByName[strtolower($tagInfo['name'])] = $tagId;
+            if (isset($tagInfo['keyword'])) {
+                $this->attributesByName[strtolower($tagInfo['keyword'])] = $tagId;
             }
         }
     }
@@ -135,21 +135,21 @@ class DicomTagLoader
      * @param  string  $id
      * @return array|null
      */
-    public function getTag(string $id): ?array
+    public function getAttribute(string $id): ?array
     {
-        return $this->tagData[$this->normaliseTag($id)] ?? null;
+        return $this->attributes[$this->normaliseTag($id)] ?? null;
     }
 
     /**
      * @param  string  $id
      * @return array|null
      */
-    public function getTagName(string $id): ?string
+    public function getAttributeTag(string $id): ?string
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->tagData, $id)) {
-            return $this->tagData[$id]['name'];
+        if (isset($this->attributes, $id)) {
+            return $this->attributes[$id]['tag'];
         }
 
         return null;
@@ -159,12 +159,42 @@ class DicomTagLoader
      * @param  string  $id
      * @return array|null
      */
-    public function getTagVr(string $id): ?string
+    public function getAttributeName(string $id): ?string
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->tagData, $id)) {
-            return $this->tagData[$id]['vr'];
+        if (isset($this->attributes, $id)) {
+            return $this->attributes[$id]['name'];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $id
+     * @return bool
+     */
+    public function getAttributeRetired(string $id): bool
+    {
+        $id = $this->normaliseTag($id);
+
+        if (isset($this->attributes, $id)) {
+            return isset($this->attributes[$id]['retired']) && $this->attributes[$id]['retired'] === 'Y';
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  string  $id
+     * @return array|null
+     */
+    public function getAttributeVr(string $id): ?string
+    {
+        $id = $this->normaliseTag($id);
+
+        if (isset($this->attributes, $id)) {
+            return $this->attributes[$id]['valueRepresentation'];
         }
 
         return null;
@@ -174,12 +204,12 @@ class DicomTagLoader
      * @param  string  $id
      * @return array|null
      */
-    public function getTagDescription(string $id): ?string
+    public function getAttributeKeyword(string $id): ?string
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->tagData, $id)) {
-            return $this->tagData[$id]['description'];
+        if (isset($this->attributes, $id)) {
+            return $this->attributes[$id]['keyword'];
         }
 
         return null;
@@ -189,13 +219,13 @@ class DicomTagLoader
      * @param  string  $id
      * @return array|null
      */
-    public function getTagVm(string $id): ?string
+    public function getAttributeVm(string $id): ?string
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->tagData, $id)) {
-            if (array_key_exists('vm', $this->tagData[$id])) {
-                return $this->tagData[$id]['vm'];
+        if (isset($this->attributes, $id)) {
+            if (array_key_exists('valueMultiplicity', $this->attributes[$id])) {
+                return $this->attributes[$id]['valueMultiplicity'];
             }
 
             return '1';
@@ -208,12 +238,12 @@ class DicomTagLoader
      * @param  string  $name
      * @return array|null
      */
-    public function getTagByName(string $name): ?array
+    public function getAttributeByName(string $name): ?array
     {
-        $tagId = $this->getTagIdByName($name);
+        $tagId = $this->getAttributeIdByName($name);
 
         if (!empty($tagId)) {
-            return $this->tagData[$tagId];
+            return $this->attributes[$tagId];
         }
 
         return null;
@@ -223,11 +253,11 @@ class DicomTagLoader
      * @param  string  $name
      * @return array|null
      */
-    public function getTagIdByName(string $name): ?string
+    public function getAttributeIdByName(string $name): ?string
     {
         $name = $this->toCamelCase($name);
 
-        return $this->tagByName[strtolower($name)] ?? null;
+        return $this->attributesByName[strtolower($name)] ?? null;
     }
 
     /**
@@ -242,9 +272,9 @@ class DicomTagLoader
     /**
      * @return \mixed[][]
      */
-    public function getAllTags(): array
+    public function getAllAttributes(): array
     {
-        return $this->tagData;
+        return $this->attributes;
     }
 
     /**

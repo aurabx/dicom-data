@@ -38,9 +38,9 @@ class DicomDictionary
      * @param string $tag DICOM tag
      * @return bool
      */
-    public static function isKnownTag(string $tag): bool
+    public static function isKnownAttribute(string $tag): bool
     {
-        return self::getLoader()->getTagName($tag) !== null;
+        return self::getLoader()->getAttributeName($tag) !== null;
     }
 
     /**
@@ -49,9 +49,9 @@ class DicomDictionary
      * @param  string  $name
      * @return string|null
      */
-    public static function getTagByName(string $name): ?array
+    public static function getAttributeByName(string $name): ?array
     {
-        return self::getLoader()->getTagByName($name);
+        return self::getLoader()->getAttributeByName($name);
     }
 
     /**
@@ -60,18 +60,18 @@ class DicomDictionary
      * @param  string  $tagId
      * @return string|null
      */
-    public static function getTagName(string $tagId): ?string
+    public static function getAttributeName(string $tagId): ?string
     {
-        return self::getLoader()->getTagName($tagId);
+        return self::getLoader()->getAttributeName($tagId);
     }
 
     /**
      * @param  string  $tagId
      * @return array|null
      */
-    public static function getTagInfo(string $tagId): ?array
+    public static function getAttributeInfo(string $tagId): ?array
     {
-        return self::getLoader()->getTag($tagId);
+        return self::getLoader()->getAttribute($tagId);
     }
 
     /**
@@ -80,24 +80,35 @@ class DicomDictionary
      * @param  string  $tagId
      * @return string|null
      */
-    public static function getTagVR(string $tagId): ?string
+    public static function getAttributeVr(string $tagId): ?string
     {
-        return self::getLoader()->getTagVR($tagId);
+        return self::getLoader()->getAttributeVr($tagId);
     }
 
-    public static function getTagDescription(string $tagId): ?string
+    /**
+     * Get the Value Representation (VR) for a tag
+     *
+     * @param  string  $tagId
+     * @return string|null
+     */
+    public static function getAttributeVm(string $tagId): ?string
     {
-        return self::getLoader()->getTagDescription($tagId);
+        return self::getLoader()->getAttributeVm($tagId);
     }
 
-    public static function getVRMeaning(string $vr): ?string
+    public static function getAttributeKeyword(string $tagId): ?string
+    {
+        return self::getLoader()->getAttributeKeyword($tagId);
+    }
+
+    public static function getVrMeaning(string $vr): ?string
     {
         return self::getLoader()->getVrMeaning($vr);
     }
 
-    public static function getAllTags(): array
+    public static function getAllAttributes(): array
     {
-        return self::getLoader()->getAllTags();
+        return self::getLoader()->getAllAttributes();
     }
 
     public static function getAllVRs(): array

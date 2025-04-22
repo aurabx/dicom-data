@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection JsonEncodingApiUsageInspection */
 
 declare(strict_types=1);
 
@@ -9,101 +9,46 @@ use PHPUnit\Framework\TestCase;
 
 class DicomDictionaryTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        // Make sure we have tags loaded for testing
-        $tagsPath = dirname(__DIR__) . '/resources/tags';
-
-        // If the resources/tags directory doesn't exist, create minimal test data
-        if (!is_dir($tagsPath)) {
-            $this->createMinimalTagsFile();
-            $tagsPath = dirname(__DIR__) . '/resources/tags';
-        }
-    }
-
-    /**
-     * Create a minimal tags file structure for testing if none exists
-     */
-    private function createMinimalTagsFile(): void
-    {
-        $tagsDir = dirname(__DIR__) . '/resources/tags';
-        if (!is_dir($tagsDir) && !mkdir($tagsDir, 0755, true) && !is_dir($tagsDir)) {
-            $this->markTestSkipped('Could not create tags directory for testing');
-        }
-
-        // Create a simple patient.json file with minimal tags
-        $patientTags = [
-            '00100010' => [
-                'name' => 'PatientName',
-                'vr' => 'PN',
-                'description' => 'Patient\'s full name'
-            ],
-            '00100020' => [
-                'name' => 'PatientID',
-                'vr' => 'LO',
-                'description' => 'Primary identifier for the patient'
-            ]
-        ];
-
-        file_put_contents(
-            $tagsDir . '/patient.json',
-            json_encode($patientTags, JSON_PRETTY_PRINT)
-        );
-
-        // Create a simple study.json file with minimal tags
-        $studyTags = [
-            '0020000D' => [
-                'name' => 'StudyInstanceUID',
-                'vr' => 'UI',
-                'description' => 'Unique identifier for the study'
-            ]
-        ];
-
-        file_put_contents(
-            $tagsDir . '/study.json',
-            json_encode($studyTags, JSON_PRETTY_PRINT)
-        );
-    }
-
     public function testGetName(): void
     {
-        $this->assertEquals('PatientName', DicomDictionary::getTagName('00100010'));
-        $this->assertEquals('PatientName', DicomDictionary::getTagName('0010,0010'));
-        $this->assertEquals('PatientName', DicomDictionary::getTagName('(0010,0010)'));
-        $this->assertNull(DicomDictionary::getTagName('12345678')); // Unknown tag
+        $this->assertEquals("Patient's Name", DicomDictionary::getAttributeName('00100010'));
+        $this->assertEquals("Patient's Name", DicomDictionary::getAttributeName('0010,0010'));
+        $this->assertEquals("Patient's Name", DicomDictionary::getAttributeName('(0010,0010)'));
+        $this->assertNull(DicomDictionary::getAttributeName('12345678')); // Unknown tag
+    }
+
+    public function testGetKeyword(): void
+    {
+        $this->assertEquals("PatientName", DicomDictionary::getAttributeKeyword('00100010'));
+        $this->assertEquals("PatientName", DicomDictionary::getAttributeKeyword('0010,0010'));
+        $this->assertEquals("PatientName", DicomDictionary::getAttributeKeyword('(0010,0010)'));
+        $this->assertNull(DicomDictionary::getAttributeName('12345678')); // Unknown tag
     }
 
     public function testGetTagByName(): void
     {
-        $tag = DicomDictionary::getTagByName('PatientName');
+        $tag = DicomDictionary::getAttributeByName('PatientName');
         $this->assertEquals('00100010', $tag['id']);
-        $this->assertNull(DicomDictionary::getTagByName('NonExistentTag'));
+        $this->assertNull(DicomDictionary::getAttributeByName('NonExistentTag'));
     }
 
     public function testGetVR(): void
     {
-        $this->assertEquals('PN', DicomDictionary::getTagVr('00100010'));
-        $this->assertEquals('UI', DicomDictionary::getTagVr('0020000D'));
-        $this->assertNull(DicomDictionary::getTagVr('12345678')); // Unknown tag
-    }
-
-
-    public function testGetDescription(): void
-    {
-        $this->assertEquals('Patient\'s full name', DicomDictionary::getTagDescription('00100010'));
-        $this->assertNull(DicomDictionary::getTagDescription('12345678')); // Unknown tag
+        $this->assertEquals('PN', DicomDictionary::getAttributeVr('00100010'));
+        $this->assertEquals('UI', DicomDictionary::getAttributeVr('0020000D'));
+        $this->assertNull(DicomDictionary::getAttributeVr('12345678')); // Unknown tag
     }
 
     public function testIsKnownTag(): void
     {
-        $this->assertTrue(DicomDictionary::isKnownTag('00100010'));
-        $this->assertTrue(DicomDictionary::isKnownTag('0010,0010'));
-        $this->assertFalse(DicomDictionary::isKnownTag('12345678'));
+        $this->assertTrue(DicomDictionary::isKnownAttribute('00100010'));
+        $this->assertTrue(DicomDictionary::isKnownAttribute('0010,0010'));
+        $this->assertFalse(DicomDictionary::isKnownAttribute('12345678'));
     }
 
     public function testGetAllTags(): void
     {
-        $tags = DicomDictionary::getAllTags();
+        $tags = DicomDictionary::getAllAttributes();
         $this->assertIsArray($tags);
         $this->assertNotEmpty($tags);
         $this->assertArrayHasKey('00100010', $tags);
@@ -111,12 +56,11 @@ class DicomDictionaryTest extends TestCase
 
     public function testGetTagInfo(): void
     {
-        $tagInfo = DicomDictionary::getTagInfo('00100010');
+        $tagInfo = DicomDictionary::getAttributeInfo('00100010');
         $this->assertIsArray($tagInfo);
-        $this->assertEquals('PatientName', $tagInfo['name']);
-        $this->assertEquals('PN', $tagInfo['vr']);
-        $this->assertNotEmpty($tagInfo['description']);
+        $this->assertEquals('PatientName', $tagInfo['keyword']);
+        $this->assertEquals('PN', $tagInfo['valueRepresentation']);
 
-        $this->assertNull(DicomDictionary::getTagInfo('12345678')); // Unknown tag
+        $this->assertNull(DicomDictionary::getAttributeInfo('12345678')); // Unknown tag
     }
 }

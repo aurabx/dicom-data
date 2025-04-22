@@ -1,8 +1,0 @@
-{
-    "00060001": {
-        "name": "CurrentFrameFunctionalGroupsSequence",
-        "vr": "SQ",
-        "description": "Functional group macro attributes for the current frame in enhanced multi-frame images.",
-        "vm": "1"
-    }
-}

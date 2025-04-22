@@ -13,68 +13,71 @@ final class DicomTagLoaderTest extends TestCase
 {
     private array $mockTags = [
         '00080020' => [
-            'name' => 'StudyDate',
-            'vr' => 'DA',
+            'name' => 'Study Date',
+            'keyword' => 'StudyDate',
+            'valueRepresentation' => 'DA',
             'description' => 'Date the study was performed'
         ],
         '00080030' => [
-            'name' => 'StudyTime',
-            'vr' => 'TM',
+            'name' => 'Study Time',
+            'keyword' => 'StudyTime',
+            'valueRepresentation' => 'TM',
             'description' => 'Time the study was performed',
-            'vm' => '1'
+            'valueMultiplicity' => '1'
         ],
         '00081048' => [
-            'name' => 'PhysiciansOfRecord',
-            'vr' => 'PN',
+            'name' => 'Physicians of Record',
+            'keyword' => 'PhysiciansOfRecord',
+            'valueRepresentation' => 'PN',
             'description' => 'Names of the physicians of record for the study',
-            'vm' => '1-n'
+            'valueMultiplicity' => '1-n'
         ]
     ];
 
     public function test_it_can_load_tags_from_array(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $this->assertNotEmpty($loader->getAllTags());
-        $this->assertSame('StudyDate', $loader->getTag('00080020')['name']);
+        $this->assertNotEmpty($loader->getAllAttributes());
+        $this->assertSame('Study Date', $loader->getAttribute('00080020')['name']);
     }
 
     public function test_it_can_return_tag_by_id(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $tag = $loader->getTag('00080030');
+        $tag = $loader->getAttribute('00080030');
         $this->assertNotNull($tag);
-        $this->assertSame('StudyTime', $tag['name']);
+        $this->assertSame('Study Time', $tag['name']);
     }
 
     public function test_it_can_return_tag_name(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $name = $loader->getTagName('00080020');
-        $this->assertSame('StudyDate', $name);
+        $name = $loader->getAttributeName('00080020');
+        $this->assertSame('Study Date', $name);
     }
 
     public function test_it_can_return_tag_vr(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $vr = $loader->getTagVr('00080030');
+        $vr = $loader->getAttributeVr('00080030');
         $this->assertSame('TM', $vr);
     }
 
     public function test_it_can_return_tag_vm(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $vm1 = $loader->getTagVm('00080030');
-        $vm2 = $loader->getTagVm('00081048');
+        $vm1 = $loader->getAttributeVm('00080030');
+        $vm2 = $loader->getAttributeVm('00081048');
 
         $this->assertSame('1', $vm1);
         $this->assertSame('1-n', $vm2);
@@ -82,19 +85,19 @@ final class DicomTagLoaderTest extends TestCase
 
     public function test_it_can_resolve_tag_id_by_name(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $tagId = $loader->getTagIdByName('study_date');
+        $tagId = $loader->getAttributeIdByName('study_date');
         $this->assertSame('00080020', $tagId);
 
-        $tagIdCamel = $loader->getTagIdByName('StudyTime');
+        $tagIdCamel = $loader->getAttributeIdByName('StudyTime');
         $this->assertSame('00080030', $tagIdCamel);
     }
 
     public function test_it_can_return_vr_meaning(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
 
         $this->assertSame('Date', $loader->getVrMeaning('DA'));
         $this->assertSame('Time', $loader->getVrMeaning('tm'));
@@ -103,7 +106,7 @@ final class DicomTagLoaderTest extends TestCase
 
     public function test_it_throws_if_file_is_invalid(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
 
         $this->expectException(DicomDictionaryException::class);
         $this->expectExceptionMessage('Invalid file path');
@@ -112,7 +115,7 @@ final class DicomTagLoaderTest extends TestCase
 
     public function testNormalizeTag(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
         $this->assertEquals('00100010', $loader->normaliseTag('00100010'));
@@ -123,7 +126,7 @@ final class DicomTagLoaderTest extends TestCase
 
     public function testFormatTag(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
         $this->assertEquals('0010,0010', $loader->formatTag('00100010', 'comma'));
@@ -138,7 +141,7 @@ final class DicomTagLoaderTest extends TestCase
 
     public function testGetVRMeaning(): void
     {
-        $loader = new DicomTagLoader(tagsPath: null);
+        $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
         $this->assertEquals('Person Name', $loader->getVrMeaning('PN'));
