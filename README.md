@@ -49,7 +49,7 @@ DicomDictionary::preload($loader);
 
 ## Development
 
-Update the standards from the Inolitic source
+Update the standards from the Innolitics source
 ```bash
 python -m venv venv
 source venv/bin/activate
