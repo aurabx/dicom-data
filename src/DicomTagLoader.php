@@ -57,6 +57,9 @@ class DicomTagLoader
     /**
      * @param  string|null  $attributes_file_path
      */
+    /**
+     * @param  string|null  $attributes_file_path Path to PHP array or JSON file
+     */
     public function __construct(?string $attributes_file_path = null)
     {
         if ($attributes_file_path !== null) {
@@ -71,38 +74,50 @@ class DicomTagLoader
      */
     private function loadDefaultTags(): void
     {
-        $resourcesDir = dirname(__DIR__) . '/resources/dicom/innolitics/standard';
-        $jsonFiles = glob("$resourcesDir/attributes.json");
+        $phpPath = dirname(__DIR__) . '/resources/dicom/php/standard/attributes.php';
 
-        if (!empty($jsonFiles)) {
-            foreach ($jsonFiles as $jsonFile) {
-                $this->loadFromFile($jsonFile, false);
-            }
-        } else {
-            throw new DicomDictionaryException("Could not find any DICOM tag definitions in default locations");
+        if (!file_exists($phpPath)) {
+            throw new DicomDictionaryException("DICOM tag PHP export not found: $phpPath");
         }
+
+        /** @var array<string, array<string, mixed>> $data */
+        $data = require $phpPath;
+
+        $this->loadFromArray($data, true);
     }
 
     /**
-     * @param  string  $jsonPath
+     * @param  string  $path
      * @param  bool  $clearExisting
      * @return void
      */
-    public function loadFromFile(string $jsonPath, bool $clearExisting = true): void
+    public function loadFromFile(string $path, bool $clearExisting = true): void
     {
-        if (!is_file($jsonPath)) {
-            throw new DicomDictionaryException("Invalid file path: $jsonPath");
+        if (!is_file($path)) {
+            throw new DicomDictionaryException("Invalid file path: $path");
         }
 
-        $jsonContent = file_get_contents($jsonPath);
-        if ($jsonContent === false) {
-            throw new DicomDictionaryException("Failed to read tag definition file: $jsonPath");
-        }
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
 
-        try {
-            $data = json_decode($jsonContent, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new DicomDictionaryException("Invalid JSON: {$e->getMessage()}");
+        if ($extension === 'php') {
+            $data = require $path;
+
+            if (!is_array($data)) {
+                throw new DicomDictionaryException("PHP file did not return an array: $path");
+            }
+        } elseif ($extension === 'json') {
+            $jsonContent = file_get_contents($path);
+            if ($jsonContent === false) {
+                throw new DicomDictionaryException("Failed to read JSON file: $path");
+            }
+
+            try {
+                $data = json_decode($jsonContent, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                throw new DicomDictionaryException("Invalid JSON: {$e->getMessage()}");
+            }
+        } else {
+            throw new DicomDictionaryException("Unsupported file type: $path");
         }
 
         $this->loadFromArray($data, $clearExisting);
@@ -126,7 +141,7 @@ class DicomTagLoader
             $this->attributes[$tagId]['id'] = $tagId;
 
             if (isset($tagInfo['keyword'])) {
-                $this->attributesByName[strtolower($tagInfo['keyword'])] = $tagId;
+                $this->attributesByName[$tagInfo['keyword']] = $tagId;
             }
         }
     }
@@ -148,7 +163,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             return $this->attributes[$id]['tag'];
         }
 
@@ -163,7 +178,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             return $this->attributes[$id]['name'];
         }
 
@@ -178,7 +193,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             return isset($this->attributes[$id]['retired']) && $this->attributes[$id]['retired'] === 'Y';
         }
 
@@ -193,7 +208,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             return $this->attributes[$id]['valueRepresentation'];
         }
 
@@ -208,7 +223,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             return $this->attributes[$id]['keyword'];
         }
 
@@ -223,7 +238,7 @@ class DicomTagLoader
     {
         $id = $this->normaliseTag($id);
 
-        if (isset($this->attributes, $id)) {
+        if (isset($this->attributes[$id])) {
             if (array_key_exists('valueMultiplicity', $this->attributes[$id])) {
                 return $this->attributes[$id]['valueMultiplicity'];
             }

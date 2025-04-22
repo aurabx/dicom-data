@@ -110,7 +110,7 @@ final class DicomTagLoaderTest extends TestCase
 
         $this->expectException(DicomDictionaryException::class);
         $this->expectExceptionMessage('Invalid file path');
-        $loader->loadFromFile(jsonPath: '/this/does/not/exist.json');
+        $loader->loadFromFile(path: '/this/does/not/exist.json');
     }
 
     public function testNormalizeTag(): void

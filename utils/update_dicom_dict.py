@@ -69,9 +69,7 @@ def rekey_json_list(json_list, key_fields, file_name, separator="::"):
 
     return rekeyed
 
-
-
-def process_file(json_path: Path, target_path: Path):
+def process_file(json_path: Path, target_json: Path, source_root: Path, php_root: Path):
     file_name = json_path.name
 
     if file_name in EXCLUDE_FILES:
@@ -81,11 +79,15 @@ def process_file(json_path: Path, target_path: Path):
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
+    target_json.parent.mkdir(parents=True, exist_ok=True)
+
     if file_name in NO_KEY_REWRITE:
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(target_path, "w", encoding="utf-8") as f:
+        with open(target_json, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
-        print(f"➖ Copied without rekeying: {file_name}")
+
+        write_php_array(data, json_path, source_root, php_root)
+
+        print(f"➖ Copied and exported {file_name} without rekeying")
         return
 
     key_field = KEY_CONFIG.get(file_name)
@@ -98,27 +100,62 @@ def process_file(json_path: Path, target_path: Path):
         return
 
     keyed_data = rekey_json_list(data, key_field, file_name)
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(target_path, "w", encoding="utf-8") as f:
+
+    with open(target_json, "w", encoding="utf-8") as f:
         json.dump(keyed_data, f, indent=2)
 
-    print(f"✅ Rewritten {file_name} with key '{key_field}'")
+    write_php_array(keyed_data, json_path, source_root, php_root)
 
+    print(f"✅ Rewritten {file_name} with key '{key_field}' and exported to PHP")
 
-def rewrite_all_jsons(source_root: Path, target_root: Path):
+def rewrite_all_jsons(source_root: Path, json_root: Path, php_root: Path):
     for json_path in source_root.rglob("*.json"):
         if json_path.name in EXCLUDE_FILES:
             print(f"🚫 Skipping excluded file: {json_path.name}")
             continue
 
         relative_path = json_path.relative_to(source_root)
-        target_path = target_root / relative_path
-        process_file(json_path, target_path)
+        target_json = json_root / relative_path
+        process_file(json_path, target_json, source_root, php_root)
+
+def write_php_array(data: dict, source_path: Path, source_root: Path, php_root: Path):
+    relative_path = source_path.relative_to(source_root).with_suffix(".php")
+    php_path = php_root / relative_path
+    php_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def to_php(val, indent=0):
+        ind = ' ' * indent
+        if isinstance(val, dict):
+            out = "[\n"
+            for k, v in val.items():
+                out += f"{ind}    {repr(k)} => {to_php(v, indent + 4)},\n"
+            out += f"{ind}]"
+            return out
+        elif isinstance(val, list):
+            out = "[\n"
+            for v in val:
+                out += f"{ind}    {to_php(v, indent + 4)},\n"
+            out += f"{ind}]"
+            return out
+        elif isinstance(val, bool):
+            return 'true' if val else 'false'
+        elif val is None:
+            return 'null'
+        else:
+            return repr(val)
+
+    php_array = "<?php\n\nreturn " + to_php(data, 0) + ";\n"
+    with open(php_path, "w", encoding="utf-8") as f:
+        f.write(php_array)
+
+    print(f"📝 Exported PHP array to {php_path}")
 
 def main():
     repo_path = clone_repo()
     try:
-        rewrite_all_jsons(repo_path, TARGET_BASE)
+        json_output = TARGET_BASE
+        php_output = Path("resources/dicom/php")
+        rewrite_all_jsons(repo_path, json_output, php_output)
     finally:
         print(f"🧹 Cleaning up {repo_path}")
         shutil.rmtree(repo_path)
