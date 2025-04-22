@@ -1,3 +1,6 @@
 composer.phar
 composer.lock
 vendor
+venv
+.phpunit.result.cache
+/.phpunit.result.cache
