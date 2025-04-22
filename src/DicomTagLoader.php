@@ -250,12 +250,12 @@ class DicomTagLoader
     }
 
     /**
-     * @param  string  $name
+     * @param  string  $keyword
      * @return array|null
      */
-    public function getAttributeByName(string $name): ?array
+    public function getAttributeByKeyword(string $keyword): ?array
     {
-        $tagId = $this->getAttributeIdByName($name);
+        $tagId = $this->getAttributeIdByKeyword($keyword);
 
         if (!empty($tagId)) {
             return $this->attributes[$tagId];
@@ -265,14 +265,14 @@ class DicomTagLoader
     }
 
     /**
-     * @param  string  $name
+     * @param  string  $keyword
      * @return array|null
      */
-    public function getAttributeIdByName(string $name): ?string
+    public function getAttributeIdByKeyword(string $keyword): ?string
     {
-        $name = $this->toCamelCase($name);
+        $keyword = $this->toCamelCase($keyword);
 
-        return $this->attributesByName[strtolower($name)] ?? null;
+        return $this->attributesByName[$keyword] ?? null;
     }
 
     /**

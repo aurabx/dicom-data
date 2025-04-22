@@ -51,7 +51,7 @@ class DicomDictionary
      */
     public static function getAttributeByName(string $name): ?array
     {
-        return self::getLoader()->getAttributeByName($name);
+        return self::getLoader()->getAttributeByKeyword($name);
     }
 
     /**

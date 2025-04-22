@@ -88,10 +88,10 @@ final class DicomTagLoaderTest extends TestCase
         $loader = new DicomTagLoader(attributes_file_path: null);
         $loader->loadFromArray(data: $this->mockTags);
 
-        $tagId = $loader->getAttributeIdByName('study_date');
+        $tagId = $loader->getAttributeIdByKeyword('StudyDate');
         $this->assertSame('00080020', $tagId);
 
-        $tagIdCamel = $loader->getAttributeIdByName('StudyTime');
+        $tagIdCamel = $loader->getAttributeIdByKeyword('StudyTime');
         $this->assertSame('00080030', $tagIdCamel);
     }
 
