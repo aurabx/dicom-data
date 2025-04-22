@@ -2,7 +2,9 @@
 
 **Aurabx\\DicomData** is a PHP 8.2+ library for managing and resolving DICOM tag metadata. It provides an interface for loading DICOM dictionaries and resolving tag names with ease. Designed for integration with medical imaging platforms or DICOMWeb services.
 
-This module effectively utilises the excellent DICOM data source from https://github.com/innolitics/dicom-standard and makes it available for PHP sources. 
+This module effectively utilises the excellent DICOM data source from https://github.com/innolitics/dicom-standard and makes it available for PHP sources. \
+
+By default, the DicomDictionary will load a PHP source, which is intended to help memory management, however the original JSON sources are also available. Unlike the Innolitics source, we rekey these so they are easier to use.
 
 ## Requirements
 
